@@ -6,9 +6,9 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.view.ViewGroup;
 
 import com.phoenix.videodemo.fragment.HomeFragment;
-import com.phoenix.videodemo.homefragment.HotFragment;
-import com.phoenix.videodemo.homefragment.MovieFragment;
-import com.phoenix.videodemo.homefragment.VedioFragment;
+import com.phoenix.videodemo.fragment.HotFragment;
+import com.phoenix.videodemo.fragment.MovieFragment;
+import com.phoenix.videodemo.fragment.VedioFragment;
 
 /**
  * Created by C罗 on 2017/3/21.

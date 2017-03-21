@@ -1,4 +1,4 @@
-package com.phoenix.videodemo.homefragment;
+package com.phoenix.videodemo.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,12 +13,12 @@ import com.phoenix.videodemo.R;
  * Created by C罗 on 2017/3/21.
  */
 
-public class VedioFragment extends Fragment {
+public class MovieFragment extends Fragment {
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-       View view=inflater.inflate(R.layout.fragment_home_video,container,false);
+       View view=inflater.inflate(R.layout.fragment_home_movie,container,false);
         return view;
 
     }

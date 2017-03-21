@@ -1,4 +1,4 @@
-package com.phoenix.videodemo.homefragment;
+package com.phoenix.videodemo.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
