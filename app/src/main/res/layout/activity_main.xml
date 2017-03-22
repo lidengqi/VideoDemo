@@ -5,79 +5,90 @@
     android:background="@android:color/white"
     android:clipChildren="false">
 
-    <FrameLayout
-        android:id="@+id/container"
+    <android.support.v4.widget.DrawerLayout
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1" />
+        android:layout_height="match_parent">
 
-    <!--<android.support.design.widget.TabLayout
-        android:id="@+id/tab_bottom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="#ffffff"
-        android:fillViewport="false"
-        app:tabIndicatorHeight="0dp"
-        app:tabMode="fixed" />-->
+        <!--侧边导航布局-->
+        <FrameLayout
+             android:id="@+id/menu_frame"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:layout_gravity="start"
+             android:choiceMode="singleChoice"/>
 
-    <LinearLayout
-        android:id="@+id/ll_tab"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:baselineAligned="false"
-        android:layout_gravity="bottom"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false">
 
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/tab_home_selector"
-            android:id="@+id/iv_home"/>
+            <FrameLayout
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
 
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/tab_mine_selector"
-            android:id="@+id/iv_mine"/>
+            <LinearLayout
+                android:id="@+id/ll_tab"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:baselineAligned="false"
+                android:layout_gravity="bottom"
+                android:gravity="center_vertical"
+                android:background="#ffffff"
+                android:orientation="horizontal">
 
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginTop="-10dp"
-            android:contentDescription="@null"
-            android:scaleType="fitCenter"
-            android:src="@mipmap/main_btn"
-            android:id="@+id/iv_main"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/tab_home_selector"
+                    android:id="@+id/iv_home"/>
 
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/tab_fujin_selector"
-            android:id="@+id/iv_fujin"/>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/tab_mine_selector"
+                    android:id="@+id/iv_mine"/>
 
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@null"
-            android:scaleType="fitCenter"
-            android:src="@drawable/tab_cart_selector"
-            android:id="@+id/iv_cart"/>
-    </LinearLayout>
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginTop="-10dp"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@mipmap/main_btn"
+                    android:id="@+id/iv_main"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/tab_fujin_selector"
+                    android:id="@+id/iv_fujin"/>
+
+                <ImageView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/tab_cart_selector"
+                    android:id="@+id/iv_cart"/>
+            </LinearLayout>
+        </FrameLayout>
+    </android.support.v4.widget.DrawerLayout>
 </FrameLayout>

@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import com.phoenix.videodemo.R;
 
 /**
- * Created by C罗 on 2017/3/21.
+ * Created by lenovo on 2017/3/22.
  */
 
 public class HotFragment extends Fragment {

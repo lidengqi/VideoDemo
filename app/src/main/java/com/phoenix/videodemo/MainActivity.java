@@ -5,7 +5,10 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.widget.DrawerLayout;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
@@ -17,12 +20,16 @@ import com.phoenix.videodemo.fragment.CartFragment;
 import com.phoenix.videodemo.fragment.FujinFragment;
 import com.phoenix.videodemo.fragment.HomeFragment;
 import com.phoenix.videodemo.fragment.MainFragment;
+import com.phoenix.videodemo.fragment.MenuFragment;
 import com.phoenix.videodemo.fragment.MineFragment;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends FragmentActivity implements View.OnClickListener, HomeFragment.OnScrollListener{
+/**
+ * Created by lenovo on 2017/3/22.
+ */
+public class MainActivity extends FragmentActivity implements View.OnClickListener {
 
     private LinearLayout ll_tab;
     private ImageView iv_home;
@@ -31,7 +38,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private ImageView iv_fujin;
     private ImageView iv_cart;
 
-//    private TabLayout mTabLayout;
     private static int TAB_NUM = 5;
     private static int TAB_HOME = 0;
     private static int TAB_MINE = 1;
@@ -39,7 +45,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private static int TAB_FUJIN = 3;
     private static int TAB_CART = 4;
     private int currentTab = 0;
-    private int lastPosition;
 
     //Fragment事务
     private FragmentTransaction transaction;
@@ -57,12 +62,21 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private static String TAG_FUJIN = "tag_fujin";
     private static String TAG_CART = "tag_cart";
 
+//    private SlidingMenu slidingMenu;
+    private DrawerLayout mDrawerLayout;
+
     private ScaleAnimation scaleAnimation;
 
-    private static Boolean isExit = false;
+    private boolean isExit = false;
+    private boolean isRecycle = false;
 
-    int[] ims_selecter = {R.drawable.tab_home_selector, R.drawable.tab_mine_selector,
-            R.mipmap.main_btn, R.drawable.tab_fujin_selector, R.drawable.tab_cart_selector};
+    private FragmentOnTouchListener fragmentOnTouchListener;
+    // 按下Y坐标，上一个事件点Y坐标
+    private float downY, lastY;
+    // 过滤多点触碰
+    private int mEvents;
+    private int tabTop, tabTempTop, tabHeight, tabBottom;
+    private boolean flag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,38 +107,14 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         tabBgChange(TAB_HOME);
         currentTab = TAB_HOME;
 
-//        mTabLayout = (TabLayout) findViewById(R.id.tab_bottom);
-//        for (int i = 0; i < TAB_NUM; i++) {
-//            View view;
-//            if (i == 2) {
-//                view = LayoutInflater.from(this).inflate(R.layout.tab_view_main_btn, null);
-//            } else {
-//                view = LayoutInflater.from(this).inflate(R.layout.tab_view, null);
-//            }
-//            ImageView img = (ImageView) view.findViewById(R.id.tab_img);
-//            img.setImageResource(ims_selecter[i]);
-//            mTabLayout.addTab(mTabLayout.newTab().setCustomView(view), i);
-//        }
-//        mTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener(){
-//
-//            @Override
-//            public void onTabSelected(TabLayout.Tab tab) {
-//                currentTab = tab.getPosition();
-//                setTabSelected(currentTab);
-//                tab.getCustomView().findViewById(R.id.tab_img).startAnimation(scaleAnimation);
-//            }
-//
-//            @Override
-//            public void onTabUnselected(TabLayout.Tab tab) {
-//                lastPosition = tab.getPosition();
-//            }
-//
-//            @Override
-//            public void onTabReselected(TabLayout.Tab tab) {
-//            }
-//        });
-//        setTabSelected(currentTab);
-//        mTabLayout.getTabAt(currentTab).select();
+        initSlidingMenu();
+    }
+
+    private void initSlidingMenu() {
+
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        fragmentManager.beginTransaction().replace(R.id.menu_frame, new MenuFragment())
+                .commit();
     }
 
     private void detachFragments(FragmentTransaction transaction) {
@@ -142,7 +132,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             case 0:
                 if (null == homeFragment) {
                     homeFragment = new HomeFragment();
-                    homeFragment.setScrollListener(this);
+                    homeFragment.setSlideMenuClickListener(new MySlideMenuClickListener());
                     transaction.replace(R.id.container, homeFragment, TAG_HOME);
                 } else {
                     transaction.attach(homeFragment);
@@ -191,8 +181,18 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            mDrawerLayout.openDrawer(Gravity.LEFT);
+            return true;
+        }
+
         if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN){
-            exitByDoubbleClick();
+            if (!mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
+                exitByDoubbleClick();
+                return true;
+            } else {
+                mDrawerLayout.closeDrawer(Gravity.LEFT);
+            }
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -243,49 +243,111 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     }
 
     //只要屏幕被触摸就会被触发
-//    @Override
-//    public boolean dispatchTouchEvent(MotionEvent ev) {
-//        //如果自定义的接口不为空，就将当前的触摸事件传递到接口当中
-//        if(fragmentOnTouchListener != null){
-//            fragmentOnTouchListener.onTouch(ev);
-//        }
-//        //接着执行这句代码保证原来的逻辑不会改变
-//        return super.dispatchTouchEvent(ev);
-//    }
-//
-//    public interface FragmentOnTouchListener{
-//        public boolean onTouch(MotionEvent ev);
-//    }
-//    //注册自定义接口
-//    public void registerFragmentOnTouchListener(FragmentOnTouchListener fragmentOnTouchListener){
-//        this.fragmentOnTouchListener = fragmentOnTouchListener;
-//    }
-//    //注销自定义接口
-//    public void unregisterMyOnTouchListener(FragmentOnTouchListener myOnTouchListener){
-//        this.fragmentOnTouchListener = null;
-//    }
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
 
-//    @Override
-//    protected void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        //记录Fragment索引，防止Activity被系统回收时，Fragment错乱的问题
-//        outState.putBoolean("isRecycle", true);
-//        outState.putInt("chooseIndex", chooseIndex);
-//    }
+        if (!flag) {
+            tabTop = ll_tab.getTop();
+            tabBottom = ll_tab.getBottom();
+            tabHeight = ll_tab.getHeight();
+            flag = true;
+        }
+        tabTempTop = ll_tab.getTop() - tabTop;
+        switch (ev.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                downY = ev.getY();
+                lastY = downY;
+                mEvents = 0;
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+            case MotionEvent.ACTION_POINTER_UP:
+                //过滤多点触碰
+                mEvents = -1;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mEvents == 0) {
+                    if (tabTempTop >= 0 && tabTempTop <= tabHeight) {
+                        ll_tab.setTop(ll_tab.getTop() + (int)(lastY - ev.getY()));
+                        ll_tab.setBottom(ll_tab.getBottom() + (int)(lastY - ev.getY()));
+                    } else if(tabTempTop > tabHeight) {
+                        ll_tab.setTop(tabTop + tabHeight);
+                        ll_tab.setBottom(tabBottom + tabHeight);
+                    } else {
+                        ll_tab.setTop(tabTop);
+                        ll_tab.setBottom(tabBottom);
+                    }
+                }else {
+                    mEvents = 0;
+                }
+                lastY = ev.getY();
+                break;
+            case MotionEvent.ACTION_UP:
+                if (Math.abs(tabTempTop) > tabHeight/2) {
+                    ll_tab.setTop(tabTop + tabHeight);
+                    ll_tab.setBottom(tabBottom + tabHeight);
+                } else {
+                    ll_tab.setTop(tabTop);
+                    ll_tab.setBottom(tabBottom);
+                }
+                break;
+            default:
+                break;
+        }
+        //如果自定义的接口不为空，就将当前的触摸事件传递到接口当中
+        if(fragmentOnTouchListener != null){
+            fragmentOnTouchListener.onTouch(ev);
+        }
+        //接着执行这句代码保证原来的逻辑不会改变
+        return super.dispatchTouchEvent(ev);
+    }
 
-//    @Override
-//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//        super.onRestoreInstanceState(savedInstanceState);
-//        isRecycle = savedInstanceState.getBoolean("isRecycle");
-//        chooseIndex = savedInstanceState.getInt("chooseIndex");
-//    }
+    class MySlideMenuClickListener implements HomeFragment.OnSlideMenuClickListener {
+
+        @Override
+        public void onClickSlideMenu() {
+            if (mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
+                mDrawerLayout.closeDrawer(Gravity.LEFT);
+            } else {
+                mDrawerLayout.openDrawer(Gravity.LEFT);
+            }
+        }
+    }
+
+    public interface FragmentOnTouchListener{
+        public boolean onTouch(MotionEvent ev);
+    }
+
+    //注册自定义接口
+    public void registerFragmentOnTouchListener(FragmentOnTouchListener fragmentOnTouchListener){
+        this.fragmentOnTouchListener = fragmentOnTouchListener;
+    }
+
+    //注销自定义接口
+    public void unregisterMyOnTouchListener(FragmentOnTouchListener myOnTouchListener){
+        this.fragmentOnTouchListener = null;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //记录Fragment索引，防止Activity被系统回收时，Fragment错乱的问题
+        outState.putBoolean("isRecycle", true);
+        outState.putInt("currentTab", currentTab);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        isRecycle = savedInstanceState.getBoolean("isRecycle");
+        currentTab = savedInstanceState.getInt("currentTab");
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
-//        if(isRecycle){
-//            tabBgChange(chooseIndex);
-//        }
+        if(isRecycle){
+            tabBgChange(currentTab);
+        }
     }
 
     @Override
@@ -317,35 +379,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
                 tabBgChange(TAB_CART);
                 currentTab = TAB_CART;
                 break;
-        }
-    }
-
-    @Override
-    public void onScroll(int scrollY) {
-        int tabHeight = ll_tab.getHeight();
-        int maxAlpha = 229;
-
-        if (scrollY > 0) {
-            if (scrollY <= tabHeight) {
-                double d = scrollY * 1.0 / (tabHeight) * 1.0;
-                int a = (int) (maxAlpha * d);
-                ll_tab.setBottom(scrollY - tabHeight);
-//                ll_main.getBackground().setAlpha(a);
-            } else {
-                ll_tab.setBottom(0);
-//                ll_main.getBackground().setAlpha(maxAlpha);
-            }
-        } else {
-            scrollY = Math.abs(scrollY);
-            if (scrollY <= tabHeight) {
-                double d = scrollY * 1.0 / (tabHeight) * 1.0;
-                int a = (int) (maxAlpha * d);
-                ll_tab.setBottom(-1 * scrollY);
-//                ll_main.getBackground().setAlpha(a);
-            } else {
-                ll_tab.setBottom(-1 * tabHeight);
-//                ll_main.getBackground().setAlpha(maxAlpha);
-            }
         }
     }
 

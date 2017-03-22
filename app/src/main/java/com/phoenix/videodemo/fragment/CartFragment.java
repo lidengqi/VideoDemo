@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import com.phoenix.videodemo.R;
 
 /**
- * Created by flashing on 2017/3/20.
+ * Created by lenovo on 2017/3/22.
  */
 
 public class CartFragment extends Fragment {

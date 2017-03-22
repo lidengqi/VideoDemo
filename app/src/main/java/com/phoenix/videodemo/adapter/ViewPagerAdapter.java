@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import java.util.List;
 
 /**
- * Created by flashing on 2017/3/20.
+ * Created by lenovo on 2017/3/22.
  */
 
 public class ViewPagerAdapter extends PagerAdapter {
@@ -39,6 +39,6 @@ public class ViewPagerAdapter extends PagerAdapter {
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        container.removeView((View)object);
+        container.removeView(datas.get(position));
     }
 }

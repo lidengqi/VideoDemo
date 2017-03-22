@@ -9,20 +9,25 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
-import android.support.v4.widget.DrawerLayout;
 import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.phoenix.videodemo.MainActivity;
+import com.phoenix.videodemo.MainActivity.FragmentOnTouchListener;
 import com.phoenix.videodemo.R;
+import com.phoenix.videodemo.adapter.FavoriteListViewAdapter;
+import com.phoenix.videodemo.adapter.VideoGridViewAdapter;
 import com.phoenix.videodemo.adapter.ViewPagerAdapter;
 import com.phoenix.videodemo.utils.DisplayUtil;
 
@@ -30,11 +35,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by flashing on 2017/3/20.
+ * Created by lenovo on 2017/3/22.
  */
 
 @TargetApi(Build.VERSION_CODES.M)
-public class HomeFragment extends Fragment implements View.OnClickListener, View.OnScrollChangeListener {
+public class HomeFragment extends Fragment implements View.OnClickListener, FragmentOnTouchListener {
+    MainActivity mActivity;
     Context mContext;
     TextView video_tv;
     TextView favorite_tv;
@@ -55,21 +61,37 @@ public class HomeFragment extends Fragment implements View.OnClickListener, View
     //游标图片宽度
     private int bmpW;
 
-    private DrawerLayout mDrawerLayout = null;
     private RelativeLayout ll_main;
     private OnScrollListener mScrollListener;
     public static final int PAGE_VIDEO = 0;
     public static final int PAGE_FAVORITE = 1;
     public static final int PAGE_MOVIE = 2;
 
+    GridView videoGridView;
+    VideoGridViewAdapter videoGridViewAdapter;
+    ListView favListView;
+    FavoriteListViewAdapter favoriteListViewAdapter;
+
+    OnSlideMenuClickListener slideMenuClickListener;
+
+    // 按下Y坐标，上一个事件点Y坐标
+    private float downY, lastY;
+    // 过滤多点触碰
+    private int mEvents;
+    private int titleTop, titleTempTop, titleHeight, titleBottom;
+    private boolean flag = false;
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getActivity();
+        mActivity = (MainActivity) getActivity();
     }
 
     @Override
     public void onResume() {
+        mActivity.registerFragmentOnTouchListener(this);
         super.onResume();
     }
 
@@ -85,14 +107,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener, View
         ll_main= (RelativeLayout) view.findViewById(R.id.ll_main);
         vp = (ViewPager) view.findViewById(R.id.viewpager);
 
-        mDrawerLayout = (DrawerLayout)view.findViewById(R.id.drawer_layout);
-
         video_tv.setOnClickListener(this);
         favorite_tv.setOnClickListener(this);
         movie_tv.setOnClickListener(this);
         menu_iv.setOnClickListener(this);
         search_iv.setOnClickListener(this);
-        mDrawerLayout.setOnScrollChangeListener(this);
 
         //游标初始化
         initCursor();
@@ -139,7 +158,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, View
                 vp.setCurrentItem(PAGE_MOVIE);
                 break;
             case R.id.iv_menu:
-                mDrawerLayout.openDrawer(Gravity.LEFT);
+                slideMenuClickListener.onClickSlideMenu();
                 break;
             case R.id.iv_search:
                 break;
@@ -167,7 +186,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener, View
 
     //初始化ViewPager
     private void initViewPager(){
-        //切换的四个界面初始化
+        //切换的三个界面初始化
         LayoutInflater inflater = getActivity().getLayoutInflater();
         LinearLayout video_layout = (LinearLayout) inflater.inflate(R.layout.fragment_home_video, null);
         LinearLayout favorite_layout = (LinearLayout) inflater.inflate(R.layout.fragment_home_favorite, null);
@@ -181,66 +200,93 @@ public class HomeFragment extends Fragment implements View.OnClickListener, View
         initMovieLayout(movie_layout);
 
         //将四个界面的视图添加到ViewPager的数据源中
+        viewList.clear();
         viewList.add(video_layout);
-        viewList.add(video_layout);
-        viewList.add(video_layout);
+        viewList.add(favorite_layout);
+        viewList.add(movie_layout);
 
         viewPagerAdapter = new ViewPagerAdapter(viewList);
         //ViewPager绑定适配器
         vp.setAdapter(viewPagerAdapter);
         //ViewPager初始选中第一视图
         vp.setCurrentItem(currIndex);
+        video_tv.setSelected(true);
         //ViewPager滑动监听器
         vp.addOnPageChangeListener(new DefineOnPageChangeListener());
     }
 
     //初始化视频布局
     private void initVideoLayout(LinearLayout layout) {
-//        TextView fragment_video_tv = (TextView) layout.findViewById(R.id.fragment_video_tv);
+        videoGridView = (GridView)layout.findViewById(R.id.gv_video);
+        if (videoGridViewAdapter == null) {
+            videoGridViewAdapter = new VideoGridViewAdapter(getActivity());
+        }
+        videoGridView.setAdapter(videoGridViewAdapter);
     }
 
     //初始化红人布局
     private void initFavoriteLayout(LinearLayout layout) {
-        //同上，略
+        favListView = (ListView) layout.findViewById(R.id.lv_favorite);
+        if (favoriteListViewAdapter == null) {
+            favoriteListViewAdapter = new FavoriteListViewAdapter(getActivity());
+        }
+        favListView.setAdapter(favoriteListViewAdapter);
     }
 
     //初始化电影布局
     private void initMovieLayout(LinearLayout layout) {
-        //同上，略
     }
 
     @Override
-    public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-        int titleHeight = ll_main.getHeight();
-        int maxAlpha = 229;
-        mScrollListener.onScroll(scrollY);
-
-        if (scrollY > 0) {
-            if (scrollY <= titleHeight) {
-                double d = scrollY * 1.0 / (titleHeight) * 1.0;
-                int a = (int) (maxAlpha * d);
-                ll_main.setTop(scrollY - titleHeight);
-//                ll_main.getBackground().setAlpha(a);
-            } else {
-                ll_main.setTop(0);
-//                ll_main.getBackground().setAlpha(maxAlpha);
-            }
-        } else {
-            scrollY = Math.abs(scrollY);
-            if (scrollY <= titleHeight) {
-                double d = scrollY * 1.0 / (titleHeight) * 1.0;
-                int a = (int) (maxAlpha * d);
-                ll_main.setTop(-1 * scrollY);
-//                ll_main.getBackground().setAlpha(a);
-            } else {
-                ll_main.setTop(-1 * titleHeight);
-//                ll_main.getBackground().setAlpha(maxAlpha);
-            }
+    public boolean onTouch(MotionEvent ev) {
+        if (!flag) {
+            titleTop = ll_main.getTop();
+            titleBottom = ll_main.getBottom();
+            titleHeight = ll_main.getHeight();
+            flag = true;
         }
-    }
-
-    public void setScrollListener(OnScrollListener mScrollListener) {
-        this.mScrollListener = mScrollListener;
+        titleTempTop = titleTop - ll_main.getTop();
+        switch (ev.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                downY = ev.getY();
+                lastY = downY;
+                mEvents = 0;
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+            case MotionEvent.ACTION_POINTER_UP:
+                //过滤多点触碰
+                mEvents = -1;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mEvents == 0) {
+                    if (titleTempTop >= 0 && titleTempTop <= titleHeight) {
+                        ll_main.setTop(ll_main.getTop() + (int)(ev.getY() - lastY));
+                        ll_main.setBottom(ll_main.getBottom() + (int)(ev.getY() - lastY));
+                    } else if(titleTempTop > titleHeight) {
+                        ll_main.setTop(titleTop - titleHeight);
+                        ll_main.setBottom(titleBottom - titleHeight);
+                    } else {
+                        ll_main.setTop(titleTop);
+                        ll_main.setBottom(titleBottom);
+                    }
+                }else {
+                    mEvents = 0;
+                }
+                lastY = ev.getY();
+                break;
+            case MotionEvent.ACTION_UP:
+                if (Math.abs(titleTempTop) > titleHeight/2) {
+                    ll_main.setTop(titleTop - titleHeight);
+                    ll_main.setBottom(titleBottom - titleHeight);
+                } else {
+                    ll_main.setTop(titleTop);
+                    ll_main.setBottom(titleBottom);
+                }
+                break;
+            default:
+                break;
+        }
+        return false;
     }
 
     /**
@@ -308,10 +354,47 @@ public class HomeFragment extends Fragment implements View.OnClickListener, View
                     break;
             }
             currIndex = arg0;
+            setPagerTextSelect(currIndex);
             //切换页卡动画
             animation.setFillAfter(true);
             animation.setDuration(300);
             cursor_iv.startAnimation(animation);
         }
+    }
+
+    private void setPagerTextSelect(int index) {
+        switch (index) {
+            case 0:
+                video_tv.setSelected(true);
+                favorite_tv.setSelected(false);
+                movie_tv.setSelected(false);
+                break;
+            case 1:
+                video_tv.setSelected(false);
+                favorite_tv.setSelected(true);
+                movie_tv.setSelected(false);
+                break;
+            case 2:
+                video_tv.setSelected(false);
+                favorite_tv.setSelected(false);
+                movie_tv.setSelected(true);
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        mActivity.unregisterMyOnTouchListener(this);
+        super.onDestroy();
+    }
+
+    public void setSlideMenuClickListener(OnSlideMenuClickListener slideMenuClickListener) {
+        this.slideMenuClickListener = slideMenuClickListener;
+    }
+
+    public interface OnSlideMenuClickListener {
+        public void onClickSlideMenu();
     }
 }

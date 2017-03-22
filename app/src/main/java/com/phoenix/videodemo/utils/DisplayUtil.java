@@ -3,7 +3,7 @@ package com.phoenix.videodemo.utils;
 import android.content.Context;
 
 /**
- * dp��spת��Ϊpx�Ĺ�����
+ * Created by lenovo on 2017/3/22.
  */
 public class DisplayUtil {
 	/**
