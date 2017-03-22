@@ -1,7 +1,6 @@
 package com.phoenix.videodemo.adapter;
 
 import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -20,13 +19,17 @@ public class ViewPagerAdapter extends PagerAdapter {
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
+        ViewGroup parent = (ViewGroup) datas.get(position).getParent();
+        if (parent != null) {
+            parent.removeAllViews();
+        }
         container.addView(datas.get(position), 0);
         return datas.get(position);
     }
 
     @Override
     public int getCount() {
-        return datas.size();
+        return  datas == null ? 0 : datas.size();
     }
 
     @Override
@@ -36,6 +39,6 @@ public class ViewPagerAdapter extends PagerAdapter {
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        container.removeView(datas.get(position));
+        container.removeView((View)object);
     }
 }

@@ -1,21 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@android:color/white"
     android:clipChildren="false">
 
     <FrameLayout
+        android:id="@+id/container"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:id="@+id/fl_main"/>
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
 
-    <LinearLayout
+    <!--<android.support.design.widget.TabLayout
+        android:id="@+id/tab_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#ffffff"
+        android:fillViewport="false"
+        app:tabIndicatorHeight="0dp"
+        app:tabMode="fixed" />-->
+
+    <LinearLayout
+        android:id="@+id/ll_tab"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:baselineAligned="false"
+        android:layout_gravity="bottom"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -23,19 +34,21 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_gravity="center_vertical"
             android:contentDescription="@null"
             android:scaleType="fitCenter"
-            android:src="@mipmap/home"
-            android:id="@+id/img_home"/>
+            android:src="@drawable/tab_home_selector"
+            android:id="@+id/iv_home"/>
 
         <ImageView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_gravity="center_vertical"
             android:contentDescription="@null"
             android:scaleType="fitCenter"
-            android:src="@mipmap/mine"
-            android:id="@+id/img_mine"/>
+            android:src="@drawable/tab_mine_selector"
+            android:id="@+id/iv_mine"/>
 
         <ImageView
             android:layout_width="0dp"
@@ -44,25 +57,27 @@
             android:layout_marginTop="-10dp"
             android:contentDescription="@null"
             android:scaleType="fitCenter"
-            android:src="@mipmap/home_pre"
-            android:id="@+id/img_main_icon"/>
+            android:src="@mipmap/main_btn"
+            android:id="@+id/iv_main"/>
 
         <ImageView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_gravity="center_vertical"
             android:contentDescription="@null"
             android:scaleType="fitCenter"
-            android:src="@mipmap/location"
-            android:id="@+id/img_meaage"/>
+            android:src="@drawable/tab_fujin_selector"
+            android:id="@+id/iv_fujin"/>
 
         <ImageView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_gravity="center_vertical"
             android:contentDescription="@null"
             android:scaleType="fitCenter"
-            android:src="@mipmap/cart"
-            android:id="@+id/img_cart"/>
+            android:src="@drawable/tab_cart_selector"
+            android:id="@+id/iv_cart"/>
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>

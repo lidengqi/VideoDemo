@@ -37,101 +37,98 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-    <RelativeLayout
-        android:id="@+id/ll_main"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        >
-        <LinearLayout
-            android:layout_width="60dp"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:id="@+id/menu_ll"
-            >
-            <Button
-                android:layout_width="29dp"
-                android:layout_height="30dp"
-                android:background="@mipmap/left"
-                android:id="@+id/menu_btn"
-                />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="60dp"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:layout_alignParentRight="true"
-            android:id="@+id/search_ll"
-            >
-            <Button
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@mipmap/search"
-                android:id="@+id/search_btn"
-                />
-        </LinearLayout>
-        <LinearLayout
+
+        <RelativeLayout
+            android:id="@+id/ll_main"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:padding="10dp"
-            android:layout_toRightOf="@id/menu_ll"
-            android:layout_toLeftOf="@id/search_ll"
-            android:orientation="vertical"
-            >
+            android:layout_height="50dp">
+
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:orientation="horizontal"
-                >
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="视频"
-                    android:textColor="#454545"
-                    android:textSize="18sp"
-                    android:id="@+id/video_tv"
-                    />
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="红人"
-                    android:textColor="#454545"
-                    android:textSize="18sp"
-                    android:id="@+id/favorite_tv"
-                    />
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="电影"
-                    android:textColor="#454545"
-                    android:textSize="18sp"
-                    android:id="@+id/movie_tv"
-                    />
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:id="@+id/ll_menu">
+
+                <ImageView
+                    android:layout_width="31dp"
+                    android:layout_height="29dp"
+                    android:src="@mipmap/ic_left"
+                    android:id="@+id/iv_menu"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:layout_alignParentRight="true"
+                android:id="@+id/ll_search">
+
+                <ImageView
+                    android:layout_width="33dp"
+                    android:layout_height="34dp"
+                    android:src="@mipmap/ic_search"
+                    android:id="@+id/iv_search"/>
+
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                >
+                android:layout_height="50dp"
+                android:padding="10dp"
+                android:layout_toRightOf="@id/ll_menu"
+                android:layout_toLeftOf="@id/ll_search"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="@string/pager_text_video"
+                        android:textColor="@color/pager_text_color"
+                        android:textSize="18sp"
+                        android:id="@+id/tv_video"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="@string/pager_text_favorite"
+                        android:textColor="@color/pager_text_color"
+                        android:textSize="18sp"
+                        android:id="@+id/tv_favorite"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="@string/pager_text_movie"
+                        android:textColor="@color/pager_text_color"
+                        android:textSize="18sp"
+                        android:id="@+id/tv_movie"/>
+
+                </LinearLayout>
+
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scaleType="matrix"
                     android:src="@mipmap/zitixiaxian"
-                    android:id="@+id/cursor_iv"
-                    />
+                    android:id="@+id/iv_cursor"/>
+
             </LinearLayout>
-        </LinearLayout>
-    </RelativeLayout>
-    <android.support.v4.view.ViewPager
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/viewpager"
-        />
+        </RelativeLayout>
+        <android.support.v4.view.ViewPager
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/viewpager" />
     </LinearLayout>
 </android.support.v4.widget.DrawerLayout>

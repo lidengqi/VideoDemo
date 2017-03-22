@@ -1,10 +1,13 @@
 package com.phoenix.videodemo.fragment;
 
+import android.annotation.TargetApi;
+import android.app.Fragment;
+import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.DisplayMetrics;
@@ -14,16 +17,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
 import com.phoenix.videodemo.R;
-import com.phoenix.videodemo.adapter.MyHomeFragmentAdapter;
 import com.phoenix.videodemo.adapter.ViewPagerAdapter;
 import com.phoenix.videodemo.utils.DisplayUtil;
-import com.phoenix.videodemo.utils.ObservableScrollView;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,14 +33,19 @@ import java.util.List;
  * Created by flashing on 2017/3/20.
  */
 
-public class HomeFragment extends Fragment implements View.OnClickListener {
+@TargetApi(Build.VERSION_CODES.M)
+public class HomeFragment extends Fragment implements View.OnClickListener, View.OnScrollChangeListener {
+    Context mContext;
     TextView video_tv;
     TextView favorite_tv;
     TextView movie_tv;
     //游标
     ImageView cursor_iv;
+    ImageView menu_iv;
+    ImageView search_iv;
     //ViewPager
     ViewPager vp;
+    ViewPagerAdapter viewPagerAdapter;
     //ViewPager数据源
     private List<View> viewList = new ArrayList<>();
     //当前选中项
@@ -48,35 +55,44 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     //游标图片宽度
     private int bmpW;
 
-    private MyHomeFragmentAdapter mAdapter;
-
-    private Button menu_btn;
     private DrawerLayout mDrawerLayout = null;
-    private ObservableScrollView sdfsd;
     private RelativeLayout ll_main;
-    public static final int PAGE_ONE = 0;
-    public static final int PAGE_TWO = 1;
-    public static final int PAGE_THREE = 2;
+    private OnScrollListener mScrollListener;
+    public static final int PAGE_VIDEO = 0;
+    public static final int PAGE_FAVORITE = 1;
+    public static final int PAGE_MOVIE = 2;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mContext = getActivity();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
-        video_tv = (TextView) view.findViewById(R.id.video_tv);
-        favorite_tv = (TextView) view.findViewById(R.id.favorite_tv);
-        movie_tv = (TextView) view.findViewById(R.id.movie_tv);
-        cursor_iv = (ImageView) view.findViewById(R.id.cursor_iv);
-        menu_btn= (Button) view.findViewById(R.id.menu_btn);
+        video_tv = (TextView) view.findViewById(R.id.tv_video);
+        favorite_tv = (TextView) view.findViewById(R.id.tv_favorite);
+        movie_tv = (TextView) view.findViewById(R.id.tv_movie);
+        cursor_iv = (ImageView) view.findViewById(R.id.iv_cursor);
+        menu_iv= (ImageView) view.findViewById(R.id.iv_menu);
+        search_iv = (ImageView) view.findViewById(R.id.iv_search);
         ll_main= (RelativeLayout) view.findViewById(R.id.ll_main);
         vp = (ViewPager) view.findViewById(R.id.viewpager);
+
         mDrawerLayout = (DrawerLayout)view.findViewById(R.id.drawer_layout);
 
         video_tv.setOnClickListener(this);
         favorite_tv.setOnClickListener(this);
         movie_tv.setOnClickListener(this);
-        menu_btn.setOnClickListener(this);
-
-        mAdapter=new MyHomeFragmentAdapter(this.getActivity().getSupportFragmentManager());
-
+        menu_iv.setOnClickListener(this);
+        search_iv.setOnClickListener(this);
+        mDrawerLayout.setOnScrollChangeListener(this);
 
         //游标初始化
         initCursor();
@@ -113,17 +129,19 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.video_tv:
-                vp.setCurrentItem(0);
+            case R.id.tv_video:
+                vp.setCurrentItem(PAGE_VIDEO);
                 break;
-            case R.id.favorite_tv:
-                vp.setCurrentItem(1);
+            case R.id.tv_favorite:
+                vp.setCurrentItem(PAGE_FAVORITE);
                 break;
-            case R.id.movie_tv:
-                vp.setCurrentItem(2);
+            case R.id.tv_movie:
+                vp.setCurrentItem(PAGE_MOVIE);
                 break;
-            case R.id.menu_btn:
+            case R.id.iv_menu:
                 mDrawerLayout.openDrawer(Gravity.LEFT);
+                break;
+            case R.id.iv_search:
                 break;
         }
     }
@@ -133,11 +151,10 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         //得到屏幕的宽度
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int screenW = dm.widthPixels- DisplayUtil.dip2px(getContext(), 120+20);
+        int screenW = dm.widthPixels - DisplayUtil.dip2px(getActivity(), 120+20);
 
         //得到游标图片的宽度
         bmpW = BitmapFactory.decodeResource(getResources(), R.mipmap.zitixiaxian).getWidth();
-//        bmpW = (screenW / 3) - DisplayUtil.dip2px(getContext(), 20);
 
         //计算图片居中需要的位移
         offset = (screenW / 3 - bmpW) / 2;
@@ -145,15 +162,16 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         Matrix matrix = new Matrix();
         matrix.postTranslate(offset, 0);
         cursor_iv.setImageMatrix(matrix);
+        currIndex = PAGE_VIDEO;
     }
 
     //初始化ViewPager
     private void initViewPager(){
         //切换的四个界面初始化
-        LinearLayout video_layout = (LinearLayout) getLayoutInflater(null).inflate(R.layout.fragment_home_video, null);
-        LinearLayout favorite_layout = (LinearLayout) getLayoutInflater(null).inflate(R.layout.fragment_home_favorite, null);
-        LinearLayout movie_layout = (LinearLayout) getLayoutInflater(null).inflate(R.layout.fragment_home_movie, null);
-
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        LinearLayout video_layout = (LinearLayout) inflater.inflate(R.layout.fragment_home_video, null);
+        LinearLayout favorite_layout = (LinearLayout) inflater.inflate(R.layout.fragment_home_favorite, null);
+        LinearLayout movie_layout = (LinearLayout) inflater.inflate(R.layout.fragment_home_movie, null);
 
         //初始化视频布局
         initVideoLayout(video_layout);
@@ -167,11 +185,12 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         viewList.add(video_layout);
         viewList.add(video_layout);
 
+        viewPagerAdapter = new ViewPagerAdapter(viewList);
         //ViewPager绑定适配器
-        vp.setAdapter(new ViewPagerAdapter(viewList));
+        vp.setAdapter(viewPagerAdapter);
         //ViewPager初始选中第一视图
         vp.setCurrentItem(currIndex);
-        //ViewPager绑定切换监听器
+        //ViewPager滑动监听器
         vp.addOnPageChangeListener(new DefineOnPageChangeListener());
     }
 
@@ -188,6 +207,51 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     //初始化电影布局
     private void initMovieLayout(LinearLayout layout) {
         //同上，略
+    }
+
+    @Override
+    public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+        int titleHeight = ll_main.getHeight();
+        int maxAlpha = 229;
+        mScrollListener.onScroll(scrollY);
+
+        if (scrollY > 0) {
+            if (scrollY <= titleHeight) {
+                double d = scrollY * 1.0 / (titleHeight) * 1.0;
+                int a = (int) (maxAlpha * d);
+                ll_main.setTop(scrollY - titleHeight);
+//                ll_main.getBackground().setAlpha(a);
+            } else {
+                ll_main.setTop(0);
+//                ll_main.getBackground().setAlpha(maxAlpha);
+            }
+        } else {
+            scrollY = Math.abs(scrollY);
+            if (scrollY <= titleHeight) {
+                double d = scrollY * 1.0 / (titleHeight) * 1.0;
+                int a = (int) (maxAlpha * d);
+                ll_main.setTop(-1 * scrollY);
+//                ll_main.getBackground().setAlpha(a);
+            } else {
+                ll_main.setTop(-1 * titleHeight);
+//                ll_main.getBackground().setAlpha(maxAlpha);
+            }
+        }
+    }
+
+    public void setScrollListener(OnScrollListener mScrollListener) {
+        this.mScrollListener = mScrollListener;
+    }
+
+    /**
+     * 滚动的回调接口
+     */
+    public interface OnScrollListener {
+        /**
+         * 回调方法，返回滚动的Y方向距离
+         * @param scrollY
+         */
+        public void onScroll(int scrollY);
     }
 
     //ViewPager视图切换监听器
@@ -249,6 +313,5 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
             animation.setDuration(300);
             cursor_iv.startAnimation(animation);
         }
-
     }
 }

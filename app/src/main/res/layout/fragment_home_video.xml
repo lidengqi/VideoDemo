@@ -37,7 +37,7 @@
                    android:layout_toLeftOf="@+id/fensishu"
                    android:layout_width="wrap_content"
                    android:layout_height="wrap_content"
-                   android:src="@mipmap/xin"
+                   android:src="@mipmap/ic_fav"
                    android:layout_centerVertical="true"
                    />
            </RelativeLayout>
@@ -75,7 +75,7 @@
                 android:layout_toLeftOf="@+id/fensishu1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@mipmap/xin"
+                android:src="@mipmap/ic_fav"
                 android:layout_centerVertical="true"
                 />
         </RelativeLayout>
