@@ -259,7 +259,16 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Frag
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mEvents == 0) {
-                    if (titleTempTop >= 0 && titleTempTop <= titleHeight) {
+                    if (titleTempTop == 0 && ev.getY() > lastY) {
+                        // 如果顶部导航栏正常显示并且下滑，则位置保持不变
+                        ll_main.setTop(titleTop);
+                        ll_main.setBottom(titleBottom);
+                    } else if (titleTempTop == titleHeight && lastY > ev.getY()) {
+                        // 如果顶部导航栏全部隐藏并且上滑，则位置保持不变
+                        ll_main.setTop(titleTop - titleHeight);
+                        ll_main.setBottom(titleBottom - titleHeight);
+                    } else if (titleTempTop >= 0 && titleTempTop <= titleHeight) {
+                        // 顶部导航栏上滑消失，下滑出现
                         ll_main.setTop(ll_main.getTop() + (int)(ev.getY() - lastY));
                         ll_main.setBottom(ll_main.getBottom() + (int)(ev.getY() - lastY));
                     } else if(titleTempTop > titleHeight) {

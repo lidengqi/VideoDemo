@@ -22,6 +22,7 @@ import com.phoenix.videodemo.fragment.HomeFragment;
 import com.phoenix.videodemo.fragment.MainFragment;
 import com.phoenix.videodemo.fragment.MenuFragment;
 import com.phoenix.videodemo.fragment.MineFragment;
+import com.phoenix.videodemo.utils.DisplayUtil;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -249,7 +250,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         if (!flag) {
             tabTop = ll_tab.getTop();
             tabBottom = ll_tab.getBottom();
-            tabHeight = ll_tab.getHeight();
+            tabHeight = ll_tab.getHeight() + DisplayUtil.dip2px(this, 10);
             flag = true;
         }
         tabTempTop = ll_tab.getTop() - tabTop;
@@ -266,7 +267,16 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mEvents == 0) {
-                    if (tabTempTop >= 0 && tabTempTop <= tabHeight) {
+                    if (tabTempTop == 0 && ev.getY()> lastY) {
+                        // 如果底部导航栏正常显示并且下滑，则位置保持不变
+                        ll_tab.setTop(tabTop);
+                        ll_tab.setBottom(tabBottom);
+                    } else if (tabTempTop == tabHeight && lastY > ev.getY()) {
+                        // 如果底部导航栏全部隐藏并且上滑，则位置保持不变
+                        ll_tab.setTop(tabTop + tabHeight);
+                        ll_tab.setBottom(tabBottom + tabHeight);
+                    }else if (tabTempTop >= 0 && tabTempTop <= tabHeight) {
+                        // 底部导航栏上滑消失，下滑出现
                         ll_tab.setTop(ll_tab.getTop() + (int)(lastY - ev.getY()));
                         ll_tab.setBottom(ll_tab.getBottom() + (int)(lastY - ev.getY()));
                     } else if(tabTempTop > tabHeight) {
