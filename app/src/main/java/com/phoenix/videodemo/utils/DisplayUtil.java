@@ -7,7 +7,6 @@ import android.content.Context;
  */
 public class DisplayUtil {
 	/**
-	 * ��pxֵת��Ϊdip��dpֵ����֤�ߴ��С����
 	 * @param context
 	 * @param pxValue
 	 * @return
@@ -18,7 +17,6 @@ public class DisplayUtil {
 	}
 	
 	/**
-	 * ��dip��dpֵת��Ϊpxֵ����֤�ߴ��С����
 	 * @param context
 	 * @param dipValue
 	 * @return
@@ -29,9 +27,8 @@ public class DisplayUtil {
 	}
 	
 	/**
-	 * ��pxֵת��Ϊspֵ����֤���ִ�С����
+	 * @param context
 	 * @param pxValue
-	 * @param fontScale
 	 * @return
 	 */
 	public static int px2sp(Context context, float pxValue) { 
@@ -40,14 +37,11 @@ public class DisplayUtil {
     }
 	
 	/**
-     * ��spֵת��Ϊpxֵ����֤���ִ�С����
-     * 
+     * @param context
      * @param spValue
-     * @param fontScale
-     *            ��DisplayMetrics��������scaledDensity��
      * @return
      */ 
-    public static int sp2px(Context context, float spValue) { 
+    public static int sp2px(Context context, float spValue) {
         final float fontScale = context.getResources().getDisplayMetrics().scaledDensity; 
         return (int) (spValue * fontScale + 0.5f); 
     }
