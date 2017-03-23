@@ -1,8 +1,8 @@
 package com.phoenix.videodemo.fragment;
 
+import android.app.Fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import com.phoenix.videodemo.R;
 
 /**
- * Created by flashing on 2017/3/20.
+ * Created by lenovo on 2017/3/22.
  */
 
 public class MainFragment extends Fragment {

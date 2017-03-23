@@ -1,44 +1,57 @@
 package com.phoenix.videodemo.fragment;
 
+import android.annotation.TargetApi;
+import android.app.Fragment;
+import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.support.v4.widget.DrawerLayout;
 import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
-import android.widget.Button;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.phoenix.videodemo.MainActivity;
+import com.phoenix.videodemo.MainActivity.FragmentOnTouchListener;
 import com.phoenix.videodemo.R;
-import com.phoenix.videodemo.adapter.MyHomeFragmentAdapter;
+import com.phoenix.videodemo.adapter.FavoriteListViewAdapter;
+import com.phoenix.videodemo.adapter.VideoGridViewAdapter;
 import com.phoenix.videodemo.adapter.ViewPagerAdapter;
 import com.phoenix.videodemo.utils.DisplayUtil;
-import com.phoenix.videodemo.utils.ObservableScrollView;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by flashing on 2017/3/20.
+ * Created by lenovo on 2017/3/22.
  */
 
-public class HomeFragment extends Fragment implements View.OnClickListener {
+@TargetApi(Build.VERSION_CODES.M)
+public class HomeFragment extends Fragment implements View.OnClickListener, FragmentOnTouchListener {
+    MainActivity mActivity;
+    Context mContext;
     TextView video_tv;
     TextView favorite_tv;
     TextView movie_tv;
     //游标
     ImageView cursor_iv;
+    ImageView menu_iv;
+    ImageView search_iv;
     //ViewPager
     ViewPager vp;
+    ViewPagerAdapter viewPagerAdapter;
     //ViewPager数据源
     private List<View> viewList = new ArrayList<>();
     //当前选中项
@@ -48,35 +61,57 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     //游标图片宽度
     private int bmpW;
 
-    private MyHomeFragmentAdapter mAdapter;
-
-    private Button menu_btn;
-    private DrawerLayout mDrawerLayout = null;
-    private ObservableScrollView sdfsd;
     private RelativeLayout ll_main;
-    public static final int PAGE_ONE = 0;
-    public static final int PAGE_TWO = 1;
-    public static final int PAGE_THREE = 2;
+    private OnScrollListener mScrollListener;
+    public static final int PAGE_VIDEO = 0;
+    public static final int PAGE_FAVORITE = 1;
+    public static final int PAGE_MOVIE = 2;
+
+    GridView videoGridView;
+    VideoGridViewAdapter videoGridViewAdapter;
+    ListView favListView;
+    FavoriteListViewAdapter favoriteListViewAdapter;
+
+    OnSlideMenuClickListener slideMenuClickListener;
+
+    // 按下Y坐标，上一个事件点Y坐标
+    private float downY, lastY;
+    // 过滤多点触碰
+    private int mEvents;
+    private int titleTop, titleTempTop, titleHeight, titleBottom;
+    private boolean flag = false;
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mContext = getActivity();
+        mActivity = (MainActivity) getActivity();
+    }
+
+    @Override
+    public void onResume() {
+        mActivity.registerFragmentOnTouchListener(this);
+        super.onResume();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
-        video_tv = (TextView) view.findViewById(R.id.video_tv);
-        favorite_tv = (TextView) view.findViewById(R.id.favorite_tv);
-        movie_tv = (TextView) view.findViewById(R.id.movie_tv);
-        cursor_iv = (ImageView) view.findViewById(R.id.cursor_iv);
-        menu_btn= (Button) view.findViewById(R.id.menu_btn);
+        video_tv = (TextView) view.findViewById(R.id.tv_video);
+        favorite_tv = (TextView) view.findViewById(R.id.tv_favorite);
+        movie_tv = (TextView) view.findViewById(R.id.tv_movie);
+        cursor_iv = (ImageView) view.findViewById(R.id.iv_cursor);
+        menu_iv= (ImageView) view.findViewById(R.id.iv_menu);
+        search_iv = (ImageView) view.findViewById(R.id.iv_search);
         ll_main= (RelativeLayout) view.findViewById(R.id.ll_main);
         vp = (ViewPager) view.findViewById(R.id.viewpager);
-        mDrawerLayout = (DrawerLayout)view.findViewById(R.id.drawer_layout);
 
         video_tv.setOnClickListener(this);
         favorite_tv.setOnClickListener(this);
         movie_tv.setOnClickListener(this);
-        menu_btn.setOnClickListener(this);
-
-        mAdapter=new MyHomeFragmentAdapter(this.getActivity().getSupportFragmentManager());
-
+        menu_iv.setOnClickListener(this);
+        search_iv.setOnClickListener(this);
 
         //游标初始化
         initCursor();
@@ -113,17 +148,19 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.video_tv:
-                vp.setCurrentItem(0);
+            case R.id.tv_video:
+                vp.setCurrentItem(PAGE_VIDEO);
                 break;
-            case R.id.favorite_tv:
-                vp.setCurrentItem(1);
+            case R.id.tv_favorite:
+                vp.setCurrentItem(PAGE_FAVORITE);
                 break;
-            case R.id.movie_tv:
-                vp.setCurrentItem(2);
+            case R.id.tv_movie:
+                vp.setCurrentItem(PAGE_MOVIE);
                 break;
-            case R.id.menu_btn:
-                mDrawerLayout.openDrawer(Gravity.LEFT);
+            case R.id.iv_menu:
+                slideMenuClickListener.onClickSlideMenu();
+                break;
+            case R.id.iv_search:
                 break;
         }
     }
@@ -133,11 +170,10 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         //得到屏幕的宽度
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int screenW = dm.widthPixels- DisplayUtil.dip2px(getContext(), 120+20);
+        int screenW = dm.widthPixels - DisplayUtil.dip2px(getActivity(), 120+20);
 
         //得到游标图片的宽度
         bmpW = BitmapFactory.decodeResource(getResources(), R.mipmap.zitixiaxian).getWidth();
-//        bmpW = (screenW / 3) - DisplayUtil.dip2px(getContext(), 20);
 
         //计算图片居中需要的位移
         offset = (screenW / 3 - bmpW) / 2;
@@ -145,15 +181,16 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         Matrix matrix = new Matrix();
         matrix.postTranslate(offset, 0);
         cursor_iv.setImageMatrix(matrix);
+        currIndex = PAGE_VIDEO;
     }
 
     //初始化ViewPager
     private void initViewPager(){
-        //切换的四个界面初始化
-        LinearLayout video_layout = (LinearLayout) getLayoutInflater(null).inflate(R.layout.fragment_home_video, null);
-        LinearLayout favorite_layout = (LinearLayout) getLayoutInflater(null).inflate(R.layout.fragment_home_favorite, null);
-        LinearLayout movie_layout = (LinearLayout) getLayoutInflater(null).inflate(R.layout.fragment_home_movie, null);
-
+        //切换的三个界面初始化
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        LinearLayout video_layout = (LinearLayout) inflater.inflate(R.layout.fragment_home_video, null);
+        LinearLayout favorite_layout = (LinearLayout) inflater.inflate(R.layout.fragment_home_favorite, null);
+        LinearLayout movie_layout = (LinearLayout) inflater.inflate(R.layout.fragment_home_movie, null);
 
         //初始化视频布局
         initVideoLayout(video_layout);
@@ -163,31 +200,113 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         initMovieLayout(movie_layout);
 
         //将四个界面的视图添加到ViewPager的数据源中
+        viewList.clear();
         viewList.add(video_layout);
-        viewList.add(video_layout);
-        viewList.add(video_layout);
+        viewList.add(favorite_layout);
+        viewList.add(movie_layout);
 
+        viewPagerAdapter = new ViewPagerAdapter(viewList);
         //ViewPager绑定适配器
-        vp.setAdapter(new ViewPagerAdapter(viewList));
+        vp.setAdapter(viewPagerAdapter);
         //ViewPager初始选中第一视图
         vp.setCurrentItem(currIndex);
-        //ViewPager绑定切换监听器
+        video_tv.setSelected(true);
+        //ViewPager滑动监听器
         vp.addOnPageChangeListener(new DefineOnPageChangeListener());
     }
 
     //初始化视频布局
     private void initVideoLayout(LinearLayout layout) {
-//        TextView fragment_video_tv = (TextView) layout.findViewById(R.id.fragment_video_tv);
+        videoGridView = (GridView)layout.findViewById(R.id.gv_video);
+        if (videoGridViewAdapter == null) {
+            videoGridViewAdapter = new VideoGridViewAdapter(getActivity());
+        }
+        videoGridView.setAdapter(videoGridViewAdapter);
     }
 
     //初始化红人布局
     private void initFavoriteLayout(LinearLayout layout) {
-        //同上，略
+        favListView = (ListView) layout.findViewById(R.id.lv_favorite);
+        if (favoriteListViewAdapter == null) {
+            favoriteListViewAdapter = new FavoriteListViewAdapter(getActivity());
+        }
+        favListView.setAdapter(favoriteListViewAdapter);
     }
 
     //初始化电影布局
     private void initMovieLayout(LinearLayout layout) {
-        //同上，略
+    }
+
+    @Override
+    public boolean onTouch(MotionEvent ev) {
+        if (!flag) {
+            titleTop = ll_main.getTop();
+            titleBottom = ll_main.getBottom();
+            titleHeight = ll_main.getHeight();
+            flag = true;
+        }
+        titleTempTop = titleTop - ll_main.getTop();
+        switch (ev.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                downY = ev.getY();
+                lastY = downY;
+                mEvents = 0;
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+            case MotionEvent.ACTION_POINTER_UP:
+                //过滤多点触碰
+                mEvents = -1;
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mEvents == 0) {
+                    if (titleTempTop == 0 && ev.getY() > lastY) {
+                        // 如果顶部导航栏正常显示并且下滑，则位置保持不变
+                        ll_main.setTop(titleTop);
+                        ll_main.setBottom(titleBottom);
+                    } else if (titleTempTop == titleHeight && lastY > ev.getY()) {
+                        // 如果顶部导航栏全部隐藏并且上滑，则位置保持不变
+                        ll_main.setTop(titleTop - titleHeight);
+                        ll_main.setBottom(titleBottom - titleHeight);
+                    } else if (titleTempTop >= 0 && titleTempTop <= titleHeight) {
+                        // 顶部导航栏上滑消失，下滑出现
+                        ll_main.setTop(ll_main.getTop() + (int)(ev.getY() - lastY));
+                        ll_main.setBottom(ll_main.getBottom() + (int)(ev.getY() - lastY));
+                    } else if(titleTempTop > titleHeight) {
+                        ll_main.setTop(titleTop - titleHeight);
+                        ll_main.setBottom(titleBottom - titleHeight);
+                    } else {
+                        ll_main.setTop(titleTop);
+                        ll_main.setBottom(titleBottom);
+                    }
+                }else {
+                    mEvents = 0;
+                }
+                lastY = ev.getY();
+                break;
+            case MotionEvent.ACTION_UP:
+                if (Math.abs(titleTempTop) > titleHeight/2) {
+                    ll_main.setTop(titleTop - titleHeight);
+                    ll_main.setBottom(titleBottom - titleHeight);
+                } else {
+                    ll_main.setTop(titleTop);
+                    ll_main.setBottom(titleBottom);
+                }
+                break;
+            default:
+                break;
+        }
+        return false;
+    }
+
+    /**
+     * 滚动的回调接口
+     */
+    public interface OnScrollListener {
+        /**
+         * 回调方法，返回滚动的Y方向距离
+         * @param scrollY
+         */
+        public void onScroll(int scrollY);
     }
 
     //ViewPager视图切换监听器
@@ -244,11 +363,47 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                     break;
             }
             currIndex = arg0;
+            setPagerTextSelect(currIndex);
             //切换页卡动画
             animation.setFillAfter(true);
             animation.setDuration(300);
             cursor_iv.startAnimation(animation);
         }
+    }
 
+    private void setPagerTextSelect(int index) {
+        switch (index) {
+            case 0:
+                video_tv.setSelected(true);
+                favorite_tv.setSelected(false);
+                movie_tv.setSelected(false);
+                break;
+            case 1:
+                video_tv.setSelected(false);
+                favorite_tv.setSelected(true);
+                movie_tv.setSelected(false);
+                break;
+            case 2:
+                video_tv.setSelected(false);
+                favorite_tv.setSelected(false);
+                movie_tv.setSelected(true);
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        mActivity.unregisterMyOnTouchListener(this);
+        super.onDestroy();
+    }
+
+    public void setSlideMenuClickListener(OnSlideMenuClickListener slideMenuClickListener) {
+        this.slideMenuClickListener = slideMenuClickListener;
+    }
+
+    public interface OnSlideMenuClickListener {
+        public void onClickSlideMenu();
     }
 }

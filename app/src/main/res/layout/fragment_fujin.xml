@@ -6,5 +6,5 @@
 <TextView
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="Message界面"/>
+    android:text="附近界面"/>
 </LinearLayout>

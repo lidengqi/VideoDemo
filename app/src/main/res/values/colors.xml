@@ -3,4 +3,6 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="pager_text_color_unselect">#454545</color>
+    <color name="pager_text_color_selected">#00F1FF</color>
 </resources>
